@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Нектус — социальная сеть, соединяющая поколения">
+    <title>Нектус — Соединяй, обменивайся, растите вместе</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-inner">
+            <a href="#home" class="logo" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+                <img src="logo.svg" alt="Нектус" style="width: 45px; height: 45px;">
+                <div class="logo-text">
+                    <h1>Нектус</h1>
+                    <small>NECTUS</small>
+                </div>
+            </a>
+
+            <nav class="main-nav" aria-label="Основная навигация">
+                <a href="#home" data-page="home">🏠 Дом</a>
+                <a href="#exchange" data-page="exchange">🔄 Обмен</a>
+                <a href="#archive" data-page="archive">📚 Архив</a>
+                <a href="#bridge" data-page="bridge">🤝 Знакомства</a>
+                <a href="#circle" data-page="circle">💫 Мой Круг</a>
+                <a href="#profile" data-page="profile">👤 Профиль</a>
+            </nav>
+
+            <div class="header-right">
+                <form class="search-form" role="search" id="global-search-form">
+                    <label for="global-search" class="visually-hidden">Поиск</label>
+                    <input type="search" id="global-search" placeholder="🔍 Навыки, истории, люди..." autocomplete="off">
+                </form>
+
+                <div class="notifications-wrapper" style="position: relative;">
+                    <button class="btn btn-ghost" id="btn-notifications" style="position: relative; padding: 8px 12px; font-size: 1.3em;">
+                        🔔 
+                        <span id="notifications-count" style="position: absolute; top: 0; right: 0; background: var(--pink-500); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7em; display: none; align-items: center; justify-content: center; font-weight: bold;">0</span>
+                    </button>
+                    <div id="notifications-dropdown" style="position: absolute; top: calc(100% + 10px); right: 0; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); min-width: 350px; max-width: 400px; max-height: 500px; overflow-y: auto; display: none; z-index: 1000; border: 1px solid var(--border);">
+                        <div style="padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                            <h4 style="margin: 0; font-size: 1.1em; color: var(--text);">Уведомления</h4>
+                            <button class="btn btn-ghost" id="btn-mark-all-read" style="font-size: 0.85em; padding: 4px 8px;">Отметить все</button>
+                        </div>
+                        <div id="notifications-list" style="padding: 10px 0;"></div>
+                    </div>
+                </div>
+
+                <div class="auth-section" id="auth-section">
+                    <button class="btn btn-primary" id="btn-show-login">🔐 Войти</button>
+                    <div class="user-profile-mini" id="user-profile-mini" style="display: none;">
+                        <img id="user-photo" src="" alt="" class="user-photo">
+                        <span id="user-display-name">Пользователь</span>
+                        <button class="btn btn-ghost" id="btn-logout">Выйти</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main" id="app-main">
+        <!-- ГЛАВНАЯ -->
+        <section class="page active" id="page-home" data-page="home">
+            <div class="page-hero hero-gradient">
+                <div class="hero-content">
+                    <span class="hero-badge">✨ Добро пожаловать</span>
+                    <h2>Река Впечатлений</h2>
+                    <p class="hero-subtitle">Выберите тему дня и откройте истории людей разных поколений</p>
+                </div>
+            </div>
+            <nav class="topics-nav" aria-label="Темы дня">
+                <a href="#topic/crafts" class="topic-chip" data-topic="crafts"><span class="topic-icon">🛠</span><span>Ремесла</span></a>
+                <a href="#topic/literature" class="topic-chip" data-topic="literature"><span class="topic-icon">📖</span><span>Литература</span></a>
+                <a href="#topic/science" class="topic-chip" data-topic="science"><span class="topic-icon">🔬</span><span>Наука</span></a>
+                <a href="#topic/sport" class="topic-chip" data-topic="sport"><span class="topic-icon">⚽</span><span>Спорт</span></a>
+                <a href="#topic/art" class="topic-chip" data-topic="art"><span class="topic-icon">🎨</span><span>Искусство</span></a>
+                <a href="#topic/volunteering" class="topic-chip" data-topic="volunteering"><span class="topic-icon">🌱</span><span>Волонтёрство</span></a>
+            </nav>
+            <div class="stories-preview">
+                <div class="section-header">
+                    <h3>Сегодня в потоке</h3>
+                    <a href="#archive" class="link-accent" data-page="archive">Все истории →</a>
+                </div>
+                <div class="stories-grid" id="home-stories-grid"></div>
+            </div>
+            <aside class="silent-mode-card">
+                <div class="silent-icon">🌿</div>
+                <div class="silent-content">
+                    <h4>Режим Тишины</h4>
+                    <p id="silent-counter">Вы просмотрели 0 из 5 историй сегодня.</p>
+                    <div class="silent-progress"><div class="progress-bar" id="silent-progress-bar"></div></div>
+                    <div class="action-buttons">
+                        <button class="btn btn-soft" id="btn-pause">Сделать паузу</button>
+                        <button class="btn btn-primary" id="btn-continue">Продолжить</button>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <!-- ДЕТАЛИ ИСТОРИИ -->
+        <section class="page" id="page-story" data-page="story">
+            <button class="back-btn" id="story-back-btn">← Назад</button>
+            <div id="story-detail-container"></div each>
+        </section>
+
+        <!-- ОБМЕН НАВЫКАМИ -->
+        <section class="page" id="page-exchange" data-page="exchange">
+            <div class="page-hero hero-gradient-warm">
+                <div class="hero-content">
+                    <span class="hero-badge">🔄 Обмен</span>
+                    <h2>Навык за Навык</h2>
+                    <p class="hero-subtitle">Обменивайтесь умениями без денег. Получайте значки «Наставник» и «Ученик».</p>
+                </div>
+            </div>
+            <div class="exchange-filters">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="teach">🎓 Учат</button>
+                <button class="filter-btn" data-filter="learn">🌱 Учатся</button>
+                <button class="filter-btn" data-filter="both">🔄 Оба</button>
+            </div>
+            <div class="exchange-grid" id="exchange-grid"></div>
+            <button class="btn btn-primary btn-large btn-gradient" style="width: 100%; margin-top: 10px;" id="btn-create-offer">
+                <span>✨</span> Предложить свой навык
+            </button>
+        </section>
+
+        <!-- АРХИВ -->
+        <section class="page" id="page-archive" data-page="archive">
+            <div class="page-hero hero-gradient-sky">
+                <div class="hero-content">
+                    <span class="hero-badge">📚 Архив</span>
+                    <h2>Живая Библиотека</h2>
+                    <p class="hero-subtitle">Капсулы Времени, Семейное Древо и сохранённые истории</p>
+                </div>
+            </div>
+            <div class="archive-tabs">
+                <button class="tab-btn active" data-tab="library">📖 Библиотека</button>
+                <button class="tab-btn" data-tab="capsules">⏳ Капсулы</button>
+                <button class="tab-btn" data-tab="tree">🌳 Древо</button>
+            </div>
+            <div class="tab-content active" id="tab-library">
+                <div class="section-header"><h3>Мои сохранённые истории</h3></div>
+                <div class="saved-stories" id="saved-stories-list"></div>
+            </div>
+            <div class="tab-content" id="tab-capsules">
+                <div class="section-header">
+                    <h3>Мои капсулы времени</h3>
+                    <button class="btn btn-primary" style="margin-top: 10px;" id="btn-create-capsule">+ Создать</button>
+                </div>
+                <div class="capsules-list" id="capsules-list"></div>
+            </div>
+            <div class="tab-content" id="tab-tree">
+                <div class="section-header"><h3>Семейное Древо 2.0</h3></div>
+                <div class="tree-placeholder">
+                    <div class="tree-icon">🌳</div>
+                    <p>Здесь появится визуализация вашего семейного древа</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ЗНАКОМСТВА -->
+        <section class="page" id="page-bridge" data-page="bridge">
+            <div class="page-hero hero-gradient-pink">
+                <div class="hero-content">
+                    <span class="hero-badge">🔗 Связи</span>
+                    <h2>Новые знакомства</h2>
+                    <p class="hero-subtitle">Предложения с фильтром «разница в возрасте > 15 лет» для межпоколенческого диалога</p>
+                </div>
+            </div>
+            <div class="bridge-grid" id="bridge-grid"></div>
+        </section>
+
+        <!-- МОЙ КРУГ -->
+        <section class="page" id="page-circle" data-page="circle">
+            <div class="page-hero hero-gradient">
+                <div class="hero-content">
+                    <span class="hero-badge">💫 Приватная зона</span>
+                    <h2>Мой Круг</h2>
+                    <p class="hero-subtitle">Близкие друзья и семья. Люди, которым вы доверяете.</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px; margin: 25px 0; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-primary btn-large btn-gradient" style="flex: 1; max-width: 400px; min-width: 250px;" id="btn-invite-circle">
+                    <span>✨</span> Пригласить в круг
+                </button>
+                <button class="btn btn-soft" id="btn-show-invitations" style="padding: 14px 25px; white-space: nowrap; font-size: 0.95em;">
+                    📬 Входящие <span id="invitations-count" style="background: var(--pink-500); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.85em; margin-left: 5px;">0</span>
+                </button>
+            </div>
+            <div class="circle-grid" id="circle-grid"></div>
+        </section>
+
+        <!-- ПРОФИЛЬ -->
+        <section class="page" id="page-profile" data-page="profile">
+            <div class="profile-hero">
+                <div class="profile-header">
+                    <div class="avatar avatar-large" id="profile-avatar">
+                        <span id="profile-avatar-letter">А</span>
+                        <img id="profile-avatar-img" src="" alt="" style="display: none;">
+                    </div>
+                    <div class="profile-info">
+                        <h2 id="profile-name">Анна, 34 года</h2>
+                        <p class="profile-status">🌉 Строитель Мостов</p>
+                        <p class="profile-bio" id="profile-bio">Люблю книги, учусь вязать, делюсь навыками работы с компьютером</p>
+                        <button class="btn btn-soft" id="btn-edit-profile" style="margin-top: 12px;">✏️ Редактировать профиль</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3>⚙️ Настройки интерфейса</h3>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+                    <button class="btn btn-soft" id="btn-theme-toggle" style="flex: 1; min-width: 200px; justify-content: center;">
+                        🌙 Тёмная тема
+                    each>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3>⚙️ Настройки Режима Тишины</h3>
+                <form id="silent-settings-form" class="settings-form">
+                    <fieldset>
+                        <legend>Лимит историй в день</legend>
+                        <label class="radio-card"><input type="radio" name="limit" value="3"><span class="radio-content"><strong>3 истории</strong><small>Для медленного погружения</small></span></label>
+                        <label class="radio-card"><input type="radio" name="limit" value="5" checked><span class="radio-content"><strong>5 историй</strong><small>Оптимальный баланс</small></span></label>
+                        <label class="radio-card"><input type="radio" name="limit" value="10"><span class="radio-content"><strong>10 историй</strong><small>Для активных исследователей</small></span></label>
+                    </fieldset>
+                    <button type="submit" class="btn btn-primary btn-gradient" style="margin-top: 10px;">💾 Сохранить настройки</button>
+                </form>
+            </div>
+
+            <div class="profile-section">
+                <h3>🗑 Управление данными</h3>
+                <button class="btn btn-ghost" id="btn-reset-data">🗑 Сбросить все данные</button>
+            </div>
+        </section>
+
+        <!-- ЧАТ (ПОЛНОЭКРАННЫЙ) -->
+        <section class="page" id="page-chat" data-page="chat">
+            <div class="chat-layout">
+                <div class="chat-header-fixed">
+                    <button class="btn btn-ghost" onclick="window.location.hash = '#circle'" style="font-size: 1.5em; padding: 5px 10px;">←</button>
+                    <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                        <div id="chat-page-avatar-placeholder" style="width: 45px; height: 45px; border-radius: 50%; background: var(--gradient-primary); display: none; align-items: center; justify-content: center; color: white; font-size: 1.2em; font-weight: bold;"></div>
+                        <img id="chat-page-avatar" src="" alt="" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; display: none;">
+                        <div>
+                            <h2 id="chat-page-name" style="margin: 0; font-size: 1.2em; color: var(--text);"></h2>
+                            <p id="chat-page-status" style="margin: 0; color: var(--text-muted); font-size: 0.85em;">онлайн</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="chat-page-messages" class="chat-messages-container">
+                    <!-- Сообщения загрузятся сюда -->
+                </div>
+                
+                <div class="chat-input-fixed">
+                    <form id="chat-page-form">
+                        <textarea id="chat-page-input" placeholder="Напишите сообщение..." rows="1" maxlength="1000" required></textarea>
+                        <button type="submit" class="btn btn-primary" style="padding: 12px 20px; border-radius: 50%;">📤</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal" id="modal">
+            <button class="modal-close" id="modal-close" aria-label="Закрыть">×</button>
+            <div class="modal-content" id="modal-content"></div>
+        </div>
+    </div>
+
+    <div class="avatar-modal-overlay" id="avatar-modal">
+        <div class="avatar-modal-content">
+            <button class="avatar-modal-close" id="avatar-modal-close">✕</button>
+            <img id="avatar-modal-img" src="" alt="Аватар">
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://hkgcaayrdmuiwcdgezno.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZ2NhYXlyZG11aXdjZGdlem5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMTAyMzgsImV4cCI6MjA5OTY4NjIzOH0.vkjxzsPnFv2pJwGXOQ8Ufyoe-LjgTLJR1CntHNjHtmY';
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
