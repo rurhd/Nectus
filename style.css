@@ -2174,12 +2174,12 @@ input, textarea { font-family: inherit; }
 @media (max-width: 768px) {
     body { 
         font-size: 15px;
-        padding-top: 140px !important;
-        padding-bottom: 140px !important;
+        padding-top: 140px;
+        padding-bottom: 140px;
     }
     .app-main { 
-        padding: var(--space-md) !important;
-        margin-top: 10px !important;
+        padding: var(--space-md);
+        margin-top: 10px;
     }
     .page-hero { padding: var(--space-xl) var(--space-lg); }
     .page-hero h2 { font-size: 2em; }
@@ -2187,76 +2187,76 @@ input, textarea { font-family: inherit; }
     .silent-mode-card { flex-direction: column; text-align: center; }
     .profile-header { flex-direction: column; text-align: center; }
     .header-inner { 
-        padding: var(--space-sm) var(--space-md) !important;
-        flex-wrap: wrap !important;
-        gap: var(--space-sm) !important;
+        padding: var(--space-sm) var(--space-md);
+        flex-wrap: wrap;
+        gap: var(--space-sm);
     }
     .logo-text h1 { font-size: 1.4em; }
     
     .app-header {
-        position: fixed !important;
+        position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        z-index: 1000 !important;
+        z-index: 1000;
     }
     
     .main-nav {
-        order: 3 !important;
-        width: 100% !important;
-        justify-content: flex-start !important;
-        overflow-x: auto !important;
-        flex-wrap: nowrap !important;
-        margin-top: var(--space-sm) !important;
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        margin-top: var(--space-sm);
         padding-bottom: 5px;
     }
     .main-nav a {
-        white-space: nowrap !important;
-        padding: 8px 12px !important;
-        font-size: 0.85em !important;
+        white-space: nowrap;
+        padding: 8px 12px;
+        font-size: 0.85em;
     }
     
     .header-right {
-        order: 2 !important;
-        width: 100% !important;
-        justify-content: space-between !important;
-        margin-top: var(--space-sm) !important;
-        display: flex !important;
-        align-items: center !important;
+        order: 2;
+        width: 100%;
+        justify-content: space-between;
+        margin-top: var(--space-sm);
+        display: flex;
+        align-items: center;
     }
     
     .notifications-wrapper {
-        order: 1 !important;
-        margin-right: 10px !important;
+        order: 1;
+        margin-right: 10px;
     }
     #btn-notifications {
-        padding: 10px !important;
-        font-size: 1.4em !important;
+        padding: 10px;
+        font-size: 1.4em;
     }
     #notifications-dropdown {
-        right: 0 !important;
-        left: auto !important;
-        min-width: 280px !important;
-        max-width: 320px !important;
+        right: 0;
+        left: auto;
+        min-width: 280px;
+        max-width: 320px;
     }
     
     .search-form {
-        order: 2 !important;
-        flex: 1 !important;
+        order: 2;
+        flex: 1;
     }
     .search-form input {
-        width: 100% !important;
-        max-width: 200px !important;
+        width: 100%;
+        max-width: 200px;
     }
     .search-form input:focus {
-        width: 100% !important;
-        max-width: 250px !important;
+        width: 100%;
+        max-width: 250px;
     }
     
     .circle-grid {
-        grid-template-columns: 1fr !important;
-        gap: var(--space-md) !important;
-        padding: var(--space-md) !important;
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+        padding: var(--space-md);
     }
 }
 
@@ -2267,8 +2267,8 @@ input, textarea { font-family: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms;
+        transition-duration: 0.01ms;
     }
 }
 
@@ -2284,11 +2284,11 @@ input, textarea { font-family: inherit; }
 }
 
 #circle-grid {
-    text-align: center !important;
+    text-align: center;
 }
 
 #circle-grid > * {
-    text-align: center !important;
+    text-align: center;
 }
 
 @keyframes messageIn {
@@ -2322,7 +2322,7 @@ input, textarea { font-family: inherit; }
 }
 
 #notifications-list div:hover {
-    background: var(--indigo-100) !important;
+    background: var(--indigo-100);
 }
 
 .circle-grid {
@@ -2456,87 +2456,71 @@ body.dark-mode .modal-overlay {
     background: rgba(0, 0, 0, 0.7);
 }
 
-/* ===== ПОЛНОЭКРАННЫЙ ЧАТ (Как в Telegram) ===== */
-#page-chat {
+/* ===== ПОЛНОЭКРАННЫЙ ЧАТ ===== */
+/* Отключаем стандартные отступы для чата */
+#page-chat.page.active {
+    display: flex !important;
+    flex-direction: column !important;
     padding: 0 !important;
-    height: calc(100vh - 80px); /* Высота минус шапка */
-    display: none;
-    flex-direction: column;
+    margin: 0 !important;
+    height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
 }
 
-#page-chat.active {
-    display: flex;
+/* Убираем padding у app-main для чата */
+#page-chat .app-main {
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-.chat-layout {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    width: 100%;
-    background: var(--bg-soft);
+/* Контейнер чата на всю высоту */
+#page-chat > div {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    background: var(--bg);
 }
 
-.chat-header-fixed {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px 20px;
+/* Шапка чата - фиксирована сверху */
+#page-chat > div > div:first-child {
+    flex-shrink: 0 !important;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    z-index: 10;
 }
 
-.chat-messages-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: var(--bg);
-    scroll-behavior: smooth;
+/* Сообщения занимают всё свободное место */
+#chat-page-messages {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
 }
 
-.chat-input-fixed {
-    padding: 15px 20px;
+/* Поле ввода - фиксировано снизу */
+#page-chat > div > div:last-child {
+    flex-shrink: 0 !important;
     background: var(--surface);
     border-top: 1px solid var(--border);
-    flex-shrink: 0;
+    padding: 15px 20px !important;
 }
 
-.chat-input-fixed form {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
+/* Убираем стандартный padding-bottom у body для чата */
+body:has(#page-chat.active) {
+    padding-bottom: 0 !important;
 }
 
-.chat-input-fixed textarea {
-    flex: 1;
-    padding: 12px 15px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: var(--bg-soft);
-    color: var(--text);
-    resize: none;
-    max-height: 120px;
-    font-family: inherit;
-    transition: border-color 0.2s;
+/* ===== СКРЫТИЕ HEADER ПРИ ОТКРЫТОМ ЧАТЕ ===== */
+body.chat-open .app-header {
+    display: none !important;
 }
 
-.chat-input-fixed textarea:focus {
-    outline: none;
-    border-color: var(--nectus-purple-light);
-}
-
-/* Центрирование пустого состояния в Мой Круг */
-.circle-empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
-    grid-column: 1 / -1;
-    width: 100%;
-    font-size: 1.1em;
+body.chat-open #page-chat {
+    height: 100vh !important;
+    padding-top: 0 !important;
 }

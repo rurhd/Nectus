@@ -242,33 +242,35 @@
         </section>
 
         <!-- ЧАТ (ПОЛНОЭКРАННЫЙ) -->
-        <section class="page" id="page-chat" data-page="chat">
-            <div class="chat-layout">
-                <div class="chat-header-fixed">
-                    <button class="btn btn-ghost" onclick="window.location.hash = '#circle'" style="font-size: 1.5em; padding: 5px 10px;">←</button>
-                    <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
-                        <div id="chat-page-avatar-placeholder" style="width: 45px; height: 45px; border-radius: 50%; background: var(--gradient-primary); display: none; align-items: center; justify-content: center; color: white; font-size: 1.2em; font-weight: bold;"></div>
-                        <img id="chat-page-avatar" src="" alt="" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; display: none;">
-                        <div>
-                            <h2 id="chat-page-name" style="margin: 0; font-size: 1.2em; color: var(--text);"></h2>
-                            <p id="chat-page-status" style="margin: 0; color: var(--text-muted); font-size: 0.85em;">онлайн</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="chat-page-messages" class="chat-messages-container">
-                    <!-- Сообщения загрузятся сюда -->
-                </div>
-                
-                <div class="chat-input-fixed">
-                    <form id="chat-page-form">
-                        <textarea id="chat-page-input" placeholder="Напишите сообщение..." rows="1" maxlength="1000" required></textarea>
-                        <button type="submit" class="btn btn-primary" style="padding: 12px 20px; border-radius: 50%;">📤</button>
-                    </form>
+<section class="page" id="page-chat" data-page="chat">
+    <div>
+        <!-- 1. Шапка (первый div) -->
+        <div style="display: flex; align-items: center; gap: 15px; padding: 15px 20px; background: var(--surface); border-bottom: 1px solid var(--border);">
+            <button class="btn btn-ghost" onclick="window.location.hash = '#circle'" style="font-size: 1.5em; padding: 5px 10px;">←</button>
+            <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                <div id="chat-page-avatar-placeholder" style="width: 45px; height: 45px; border-radius: 50%; background: var(--gradient-primary); display: none; align-items: center; justify-content: center; color: white; font-size: 1.2em; font-weight: bold;"></div>
+                <img id="chat-page-avatar" src="" alt="" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; display: none;">
+                <div>
+                    <h2 id="chat-page-name" style="margin: 0; font-size: 1.2em;"></h2>
+                    <p id="chat-page-status" style="margin: 0; font-size: 0.85em; color: var(--text-muted);">онлайн</p>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
+        
+        <!-- 2. Сообщения (второй div) -->
+        <div id="chat-page-messages" style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <p style="text-align: center; color: var(--text-muted); padding: 40px;">Загрузка...</p>
+        </div>
+        
+        <!-- 3. Поле ввода (третий div, последний) -->
+        <div style="padding: 15px 20px; background: var(--surface); border-top: 1px solid var(--border);">
+            <form id="chat-page-form" style="display: flex; gap: 10px;">
+                <textarea id="chat-page-input" placeholder="Напишите сообщение..." rows="1" maxlength="1000" style="flex: 1; padding: 12px 15px; border: 1px solid var(--border); border-radius: 20px; resize: none; font-family: inherit;"></textarea>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 20px; border-radius: 50%;">📤</button>
+            </form>
+        </div>
+    </div>
+</section>
 
     <!-- МОДАЛЬНЫЕ ОКНА -->
     <div class="modal-overlay" id="modal-overlay">

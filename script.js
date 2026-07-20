@@ -1,5 +1,5 @@
 /* ============================================================
-   НЕКТУС — Оптимизированная версия
+   НЕКТУС — Оптимизированная и исправленная версия
    ============================================================ */
 
 // ===== 1. УТИЛИТЫ =====
@@ -73,7 +73,6 @@ const Theme = {
     init() {
         const isDark = localStorage.getItem('nectus-theme') === 'dark';
         if (isDark) document.body.classList.add('dark-mode');
-        
         const toggleBtn = document.getElementById('btn-theme-toggle');
         if (toggleBtn) {
             toggleBtn.textContent = isDark ? '☀️ Светлая тема' : '🌙 Тёмная тема';
@@ -98,7 +97,6 @@ const Auth = {
         if (this.user) {
             await this.loadProfile();
             Profile.syncWithAuth();
-            // Мгновенная загрузка круга при входе, если мы уже на этой странице
             if (window.location.hash === '#circle') await Renderer.renderCircle();
         }
         
@@ -108,6 +106,7 @@ const Auth = {
                 await this.loadProfile();
                 Profile.syncWithAuth();
                 this.showUserProfile();
+                this.startPresenceTracking();
                 if (window.location.hash === '#circle') await Renderer.renderCircle();
             } else if (event === 'SIGNED_OUT') {
                 this.profile = null;
@@ -139,7 +138,6 @@ const Auth = {
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="auth-submit-btn">Войти</button>
             </form>
         `);
-
         let mode = 'login';
         const tabLogin = document.getElementById('tab-login');
         const tabRegister = document.getElementById('tab-register');
@@ -209,7 +207,6 @@ const Auth = {
         const supabase = window.supabaseClient;
         const { data, error } = await supabase.from('profiles').select('*').eq('id', this.user.id).maybeSingle();
         if (error) return null;
-        
         this.profile = data || {};
         Profile.data = {
             name: data?.name || this.user.email?.split('@')[0] || 'Гость',
@@ -265,6 +262,22 @@ const Auth = {
             username: this.profile?.username || null, age: this.profile?.age || 18,
             photo: this.profile?.photo_url || null, email: this.user?.email || ''
         };
+    },
+
+    updateLastSeen() {
+        if (!this.user) return;
+        window.supabaseClient.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', this.user.id);
+    },
+
+    startPresenceTracking() {
+        this.updateLastSeen();
+        this.presenceInterval = setInterval(() => this.updateLastSeen(), 30000);
+        ['click', 'keydown', 'scroll'].forEach(event => {
+            document.addEventListener(event, () => this.updateLastSeen(), { passive: true });
+        });
+        window.addEventListener('beforeunload', () => {
+            if (this.presenceInterval) clearInterval(this.presenceInterval);
+        });
     }
 };
 
@@ -339,11 +352,9 @@ const Database = {
     async getPrivateMessages(otherUserId) {
         const user = Auth.getUser();
         if (!user || !user.id) return [];
-        
         const { data: allMessages, error } = await this.client.from('private_messages')
             .select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: true });
         if (error) return [];
-        
         return allMessages.filter(msg => 
             (msg.sender_id === user.id && msg.receiver_id === otherUserId) ||
             (msg.sender_id === otherUserId && msg.receiver_id === user.id)
@@ -358,20 +369,16 @@ const Database = {
         if (user.username && user.username.toLowerCase() === username.toLowerCase()) {
             Toast.show('Нельзя пригласить самого себя! 😅', 'warning'); return null;
         }
-
         const { data: targetProfile, error: searchError } = await this.client.from('profiles')
             .select('id, username, name, email').ilike('username', username).maybeSingle();
         if (searchError || !targetProfile) { Toast.show(`Пользователь @${username} не найден`, 'error'); return null; }
         if (targetProfile.id === user.id) { Toast.show('Нельзя пригласить самого себя!', 'warning'); return null; }
-
         const { data: existing } = await this.client.from('circle_invitations').select('id')
             .eq('sender_id', user.id).eq('receiver_id', targetProfile.id).eq('status', 'pending').maybeSingle();
         if (existing) { Toast.show('Приглашение уже отправлено!', 'warning'); return existing; }
-
         const { data, error } = await this.client.from('circle_invitations').insert({
             sender_id: user.id, receiver_id: targetProfile.id, receiver_email: targetProfile.email, status: 'pending'
         }).select().single();
-        
         if (error) { Toast.show('Ошибка при отправке приглашения', 'error'); return null; }
         Toast.show(`Приглашение отправлено @${targetProfile.username}! ✨`, 'success');
         return data;
@@ -399,15 +406,12 @@ const Database = {
         const user = Auth.getUser();
         if (!user || !user.id) return null;
         const status = accept ? 'accepted' : 'rejected';
-        
         const { data: invitation, error: fetchError } = await this.client.from('circle_invitations')
             .select('sender_id, receiver_id, receiver_email').eq('id', invitationId).single();
         if (fetchError || !invitation) return null;
-        
         const { data, error } = await this.client.from('circle_invitations').update({ 
             status: status, responded_at: new Date().toISOString()
         }).eq('id', invitationId).select().single();
-        
         if (error) return null;
         if (accept && data) await this.createCircleConnection(invitation.sender_id, user.id);
         return data;
@@ -424,10 +428,8 @@ const Database = {
         const { data: connections, error } = await this.client.from('circle_connections')
             .select('user1_id, user2_id').or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
         if (error) return [];
-        
         const otherUserIds = connections.map(conn => conn.user1_id === user.id ? conn.user2_id : conn.user1_id);
         if (otherUserIds.length === 0) return [];
-        
         const { data: profiles, error: profilesError } = await this.client.from('profiles').select('*').in('id', otherUserIds);
         return profilesError ? [] : (profiles || []);
     }
@@ -624,17 +626,17 @@ const Profile = {
     get() { return this.data; }
 };
 
-// ===== 9. ЧАТ (С ЧЕРНОВИКАМИ) =====
+// ===== 9. ЧАТ (ПОЛНОСТЬЮ ПЕРЕПИСАН ДЛЯ СТАБИЛЬНОСТИ) =====
 const Chat = {
-    subscription: null,
-    drafts: new Map(), // Хранение черновиков по ID чата
+    drafts: new Map(),
     currentChatId: null,
+    statusInterval: null,
+    pendingChatUser: null,
 
     init() {
         const chatForm = document.getElementById('chat-page-form');
         const chatInput = document.getElementById('chat-page-input');
 
-        // Сохранение черновика при вводе
         if (chatInput) {
             chatInput.addEventListener('input', (e) => {
                 if (this.currentChatId) {
@@ -652,49 +654,101 @@ const Chat = {
                 const result = await Database.sendPrivateMessage(this.currentChatId, text);
                 if (result) {
                     chatInput.value = '';
-                    this.drafts.delete(this.currentChatId); // Очищаем черновик после успешной отправки
+                    this.drafts.delete(this.currentChatId);
                     await Renderer.renderChat(this.currentChatId);
-                    const container = document.getElementById('chat-page-messages');
-                    if (container) container.scrollTop = container.scrollHeight;
                 }
             });
         }
     },
 
-    async openChat(userId, userName, userPhoto) {
+    // Вызывается при клике на кнопку "Написать"
+    open(userId, userName, userPhoto) {
+        this.pendingChatUser = { id: userId, name: userName, photo: userPhoto };
+        window.location.hash = `chat/${userId}`;
+    },
+
+    // Вызывается Роутером при переходе на страницу чата
+    async loadPage(userId) {
+        document.body.classList.add('chat-open');
         this.currentChatId = userId;
-        const supabase = window.supabaseClient;
-        const { data: userProfile } = await supabase.from('profiles').select('name, username, photo_url').eq('id', userId).single();
         
+        if (this.statusInterval) clearInterval(this.statusInterval);
+
+        const supabase = window.supabaseClient;
+        const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('name, username, photo_url, last_seen')
+            .eq('id', userId)
+            .single();
+
         const avatarPlaceholder = document.getElementById('chat-page-avatar-placeholder');
         const avatarImg = document.getElementById('chat-page-avatar');
         const nameEl = document.getElementById('chat-page-name');
         const statusEl = document.getElementById('chat-page-status');
-        
+
         if (avatarPlaceholder && avatarImg && nameEl) {
-            const displayName = userProfile?.name || userName || 'Пользователь';
-            const displayPhoto = userProfile?.photo_url || userPhoto;
+            const displayName = userProfile?.name || this.pendingChatUser?.name || 'Пользователь';
+            const displayPhoto = userProfile?.photo_url || this.pendingChatUser?.photo;
             const username = userProfile?.username;
-            
+
             if (displayPhoto) {
-                avatarImg.src = displayPhoto; avatarImg.style.display = 'block'; avatarPlaceholder.style.display = 'none';
+                avatarImg.src = displayPhoto; 
+                avatarImg.style.display = 'block'; 
+                avatarPlaceholder.style.display = 'none';
             } else {
-                avatarPlaceholder.textContent = Utils.getInitials(displayName); avatarPlaceholder.style.display = 'flex'; avatarImg.style.display = 'none';
+                avatarPlaceholder.textContent = Utils.getInitials(displayName); 
+                avatarPlaceholder.style.display = 'flex'; 
+                avatarImg.style.display = 'none';
             }
-            
-            nameEl.innerHTML = username ? `${Utils.escapeHtml(displayName)}<span style="color: var(--text-muted); font-weight: 400; font-size: 0.9em; margin-left: 5px;">@${Utils.escapeHtml(username)}</span>` : Utils.escapeHtml(displayName);
-            if (statusEl) statusEl.textContent = 'онлайн';
+
+            nameEl.innerHTML = username 
+                ? `${Utils.escapeHtml(displayName)}<span style="color: var(--text-muted); font-weight: 400; font-size: 0.9em; margin-left: 5px;">@${Utils.escapeHtml(username)}</span>` 
+                : Utils.escapeHtml(displayName);
+
+            if (statusEl) {
+                const updateStatusUI = (lastSeen) => {
+                    if (!lastSeen) {
+                        statusEl.textContent = 'оффлайн';
+                        statusEl.style.color = '#9CA3AF';
+                    } else {
+                        const diffMs = new Date() - new Date(lastSeen);
+                        const diffSeconds = Math.floor(diffMs / 1000);
+                        if (diffSeconds < 10) {
+                            statusEl.textContent = '🟢 онлайн';
+                            statusEl.style.color = '#10B981';
+                        } else if (diffSeconds < 60) {
+                            statusEl.textContent = `был(а) ${diffSeconds} сек. назад`;
+                            statusEl.style.color = '#9CA3AF';
+                        } else {
+                            const minutes = Math.floor(diffSeconds / 60);
+                            if (minutes < 60) {
+                                statusEl.textContent = `был(а) ${minutes} мин. назад`;
+                            } else {
+                                const hours = Math.floor(minutes / 60);
+                                statusEl.textContent = `был(а) ${hours} ч. назад`;
+                            }
+                            statusEl.style.color = '#9CA3AF';
+                        }
+                    }
+                };
+
+                updateStatusUI(userProfile?.last_seen);
+
+                this.statusInterval = setInterval(async () => {
+                    const { data } = await supabase.from('profiles').select('last_seen').eq('id', userId).single();
+                    if (data) updateStatusUI(data.last_seen);
+                }, 5000);
+            }
         }
-        
-        window.location.hash = `chat/${userId}`;
+
         await Renderer.renderChat(userId);
-        
-        // Восстановление черновика
+
         const chatInput = document.getElementById('chat-page-input');
         if (chatInput) {
             chatInput.value = this.drafts.get(userId) || '';
-            chatInput.focus();
         }
+        
+        this.pendingChatUser = null;
     }
 };
 
@@ -705,7 +759,6 @@ const CircleInvitations = {
         document.getElementById('btn-show-invitations')?.addEventListener('click', () => this.showIncomingInvitations());
         setTimeout(() => this.checkIncomingInvitations(), 1000);
     },
-
     showInviteModal() {
         if (!Auth.requireAuth()) return;
         Modal.open(`
@@ -722,7 +775,6 @@ const CircleInvitations = {
             e.preventDefault(); await this.sendInvitation();
         });
     },
-
     async checkIncomingInvitations() {
         const user = Auth.getUser();
         if (!user || !user.id) return;
@@ -733,26 +785,21 @@ const CircleInvitations = {
             if (invitations.length > 0) Toast.show(`У вас ${invitations.length} новое приглашение! 📬`, 'info', 5000);
         }
     },
-
     async sendInvitation() {
         const username = document.getElementById('invite-username').value.trim();
         const errorEl = document.getElementById('invite-error');
         const submitBtn = document.querySelector('#invite-form button[type="submit"]');
-        
         if (!username || username.length < 3 || username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(username)) {
             errorEl.textContent = 'Username: 3-20 символов (a-z, A-Z, 0-9, _)'; errorEl.style.display = 'block'; return;
         }
-        
         submitBtn.disabled = true; submitBtn.textContent = 'Отправка...'; errorEl.style.display = 'none';
         const result = await Database.sendCircleInvitation(username);
-        
         if (result) { Modal.close(); this.loadSentInvitations(); }
         else {
             errorEl.textContent = 'Не удалось отправить'; errorEl.style.display = 'block';
             submitBtn.disabled = false; submitBtn.textContent = '📨 Отправить';
         }
     },
-
     async loadSentInvitations() {
         const invitations = await Database.getMyInvitations();
         const list = document.getElementById('invitations-list');
@@ -761,7 +808,6 @@ const CircleInvitations = {
             ? '<p style="color: var(--text-muted); text-align: center; padding: 10px;">Нет активных приглашений</p>'
             : invitations.map(inv => `<div style="padding: 10px; background: var(--surface); border-radius: var(--radius-md); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;"><span>${Utils.escapeHtml(inv.receiver_email)}</span><span class="badge badge-soft" style="font-size: 0.8em;">⏳ Ожидает</span></div>`).join('');
     },
-
     async showIncomingInvitations() {
         const invitations = await Database.getIncomingInvitations();
         if (invitations.length === 0) {
@@ -783,7 +829,6 @@ const CircleInvitations = {
             </div>
         `);
     },
-
     async handleResponse(invitationId, accept) {
         const result = await Database.respondToInvitation(invitationId, accept);
         if (result) {
@@ -968,14 +1013,11 @@ const Renderer = {
         const grid = document.getElementById('circle-grid');
         if (!grid) return;
         grid.innerHTML = '<p style="text-align:center; padding: 20px;">Загрузка пользователей...</p>';
-        
         const members = await Database.getCircleMembers();
         if (!members || members.length === 0) {
-            // ✅ ИСПРАВЛЕНИЕ 2: Идеальное центрирование пустого состояния
             grid.innerHTML = '<p class="circle-empty-state">Пока нет пользователей в вашем круге. Пригласите кого-нибудь!</p>';
             return;
         }
-        
         grid.innerHTML = members.map(user => {
             const firstLetter = user.name && user.name.trim() ? user.name.trim().charAt(0).toUpperCase() : '?';
             const hasPhoto = user.photo_url && user.photo_url.trim() !== '';
@@ -987,44 +1029,55 @@ const Renderer = {
                 <h4>${Utils.escapeHtml(user.name)}</h4>
                 <p class="user-age">${user.age || '?'} лет</p>
                 <p class="user-bio">${Utils.escapeHtml(user.bio || 'Нет информации')}</p>
-                <button class="btn btn-primary btn-chat" onclick="Chat.openChat('${user.id}', '${Utils.escapeHtml(user.name)}', '${user.photo_url || ''}')">💬 Написать</button>
+                <button class="btn btn-primary btn-chat" onclick="Chat.open('${user.id}', '${Utils.escapeHtml(user.name)}', '${user.photo_url || ''}')">💬 Написать</button>
             </article>`;
         }).join('');
     },
 
     async renderChat(otherUserId) {
         const currentUser = Auth.getUser();
-        if (!currentUser || !currentUser.id) { Toast.show('Ошибка: вы не авторизованы', 'error'); return; }
+        if (!currentUser || !currentUser.id) { 
+            Toast.show('Ошибка: вы не авторизованы', 'error'); 
+            return; 
+        }
         
+        const container = document.getElementById('chat-page-messages');
+        if (!container) return;
+
+        container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Загрузка сообщений...</p>';
+
         const { data: allMessages, error } = await Database.client.from('private_messages')
             .select('*').or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`).order('created_at', { ascending: true });
-        if (error) { Toast.show('Ошибка загрузки чата', 'error'); return; }
+            
+        if (error) { 
+            container.innerHTML = '<p style="text-align: center; color: var(--pink-500); padding: 40px;">Ошибка загрузки чата.</p>';
+            return; 
+        }
         
         const messages = allMessages.filter(msg => 
             (msg.sender_id === currentUser.id && msg.receiver_id === otherUserId) ||
             (msg.sender_id === otherUserId && msg.receiver_id === currentUser.id)
         );
         
-        const container = document.getElementById('chat-page-messages');
-        if (!container) return;
-        
         if (messages.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px; grid-column: 1 / -1;">Начните общение первым! 👋</p>';
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 40px;">Начните общение первым! 👋</p>';
             return;
         }
-        
+
         container.innerHTML = messages.map(msg => {
             const isOwn = msg.sender_id === currentUser.id;
             return `
-                <div class="message ${isOwn ? 'message-own' : 'message-other'}" style="display: flex; justify-content: ${isOwn ? 'flex-end' : 'flex-start'}; margin-bottom: 10px;">
-                    <div style="max-width: 70%; padding: 10px 15px; border-radius: 18px; ${isOwn ? 'background: var(--gradient-primary); color: white;' : 'background: var(--surface); border: 1px solid var(--border);'}">
-                        <div style="margin-bottom: 5px; word-wrap: break-word;">${Utils.escapeHtml(msg.text)}</div>
-                        <div style="font-size: 0.75em; opacity: 0.7; text-align: right;">${Utils.formatTime(msg.created_at)}</div>
-                    </div>
-                </div>`;
+            <div class="message ${isOwn ? 'message-own' : 'message-other'}" style="display: flex; justify-content: ${isOwn ? 'flex-end' : 'flex-start'}; margin-bottom: 10px;">
+                <div style="max-width: 70%; padding: 10px 15px; border-radius: 18px; ${isOwn ? 'background: var(--gradient-primary); color: white;' : 'background: var(--surface); border: 1px solid var(--border);'}">
+                    <div style="margin-bottom: 5px; word-wrap: break-word;">${Utils.escapeHtml(msg.text)}</div>
+                    <div style="font-size: 0.75em; opacity: 0.7; text-align: right;">${Utils.formatTime(msg.created_at)}</div>
+                </div>
+            </div>`;
         }).join('');
-        
-        container.scrollTop = container.scrollHeight;
+
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 50);
     }
 };
 
@@ -1066,6 +1119,10 @@ const Router = {
         else this.navigate(page);
     },
     async navigate(page, param = null) {
+        if (page !== 'chat') {
+            document.body.classList.remove('chat-open');
+        }
+
         State.previousPage = State.currentPage; 
         State.currentPage = page;
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1073,11 +1130,11 @@ const Router = {
         let targetId = page === 'topic' ? 'page-topic' : (page === 'story' ? 'page-story' : (page === 'chat' ? 'page-chat' : `page-${page}`));
         
         if (page === 'story') { State.currentStory = param; await Renderer.renderStory(param); }
-        else if (page === 'chat') { await Renderer.renderChat(param); }
+        else if (page === 'chat') { await Chat.loadPage(param); }
         else if (page === 'exchange') { await Renderer.renderExchange(); State.exchangesLoaded = true; }
         else if (page === 'archive') { await Renderer.renderCapsules(); State.capsulesLoaded = true; }
         else if (page === 'circle') { 
-            await Renderer.renderCircle(); // ✅ ИСПРАВЛЕНИЕ 1: Всегда рендерим при переходе
+            await Renderer.renderCircle(); 
             State.circleLoaded = true; 
         }
         
@@ -1098,6 +1155,12 @@ const EventHandlers = {
         });
         document.getElementById('story-back-btn')?.addEventListener('click', () => {
             window.location.hash = State.currentTopic ? `topic/${State.currentTopic}` : (State.previousPage || 'home');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[onclick*="window.location.hash = \'#circle\'"]')) {
+                document.body.classList.remove('chat-open');
+            }
         });
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
