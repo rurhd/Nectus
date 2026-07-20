@@ -844,23 +844,47 @@ const CircleInvitations = {
 
 // ===== 11. РЕНДЕРИНГ =====
 const Renderer = {
-    async renderHomeStories() {
-        const grid = document.getElementById('home-stories-grid');
-        if (!grid) return;
-        grid.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Загрузка...</p>';
-        try {
-            const { data, error } = await Database.client.from('stories').select('*').order('created_at', { ascending: false }).limit(6);
-            if (error) throw error;
-            State.stories = data || [];
-            if (State.stories.length === 0) { grid.innerHTML = '<p style="text-align:center; padding: 20px;">Историй пока нет.</p>'; return; }
-            grid.innerHTML = State.stories.map(s => this.createStoryCard(s)).join('');
-            this.attachStoryCardListeners(grid);
-            await this.updateCommentCounts(grid);
-        } catch (error) {
-            grid.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--pink-500);">Ошибка загрузки.</p>';
+async renderHomeStories() {
+    const grid = document.getElementById('home-stories-grid');
+    if (!grid) return;
+    
+    // Показываем скелетон загрузки
+    grid.innerHTML = Array(6).fill('<div class="story-card" style="height: 200px; background: var(--surface); border-radius: var(--radius-lg); animation: pulse 1s infinite;"></div>').join('');
+    
+    try {
+        const { data, error } = await Database.client
+            .from('stories')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(6);
+        
+        if (error) throw error;
+        
+        State.stories = data || [];
+        
+        if (State.stories.length === 0) {
+            grid.innerHTML = '<p style="text-align:center; padding: 20px;">Историй пока нет.</p>';
+            return;
         }
-    },
-
+        
+        grid.innerHTML = State.stories.map(s => this.createStoryCard(s)).join('');
+        this.attachStoryCardListeners(grid);
+        
+        // Загружаем комментарии параллельно
+        await Promise.all(
+            State.stories.map(async (story) => {
+                const comments = await Database.getComments(story.id);
+                const card = grid.querySelector(`[data-story-id="${story.id}"]`);
+                if (card) {
+                    const countBtn = card.querySelector('[data-comments-count]');
+                    if (countBtn) countBtn.textContent = `💬 ${comments.length}`;
+                }
+            })
+        );
+    } catch (error) {
+        grid.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--pink-500);">Ошибка загрузки.</p>';
+    }
+},
     createStoryCard(story) {
         const topicNames = { crafts: 'Ремесла', literature: 'Литература', science: 'Наука', sport: 'Спорт', art: 'Искусство', volunteering: 'Волонтёрство' };
         const topicIcons = { crafts: '🛠', literature: '📖', science: '🔬', sport: '⚽', art: '🎨', volunteering: '🌱' };

@@ -2524,3 +2524,29 @@ body.chat-open #page-chat {
     height: 100vh !important;
     padding-top: 0 !important;
 }
+
+/* Исправление отступа для чата на мобильных */
+@media (max-width: 768px) {
+    body.chat-open {
+        padding-top: 0 !important;
+    }
+    
+    body.chat-open .app-header {
+        display: none !important;
+    }
+    
+    body.chat-open #page-chat {
+        height: 100vh !important;
+        padding-top: 0 !important;
+    }
+    
+    body.chat-open .app-main {
+        padding: 0 !important;
+        margin-top: 0 !important;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
