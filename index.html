@@ -291,10 +291,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://hkgcaayrdmuiwcdgezno.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZ2NhYXlyZG11aXdjZGdlem5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMTAyMzgsImV4cCI6MjA5OTY4NjIzOH0.vkjxzsPnFv2pJwGXOQ8Ufyoe-LjgTLJR1CntHNjHtmY';
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    </script>
-    <script src="script.js"></script>
+  // ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ ИЗ SUPABASE!
+  const SUPABASE_URL = 'https://hkgcaayrdmuiwcdgezno.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrZ2NhYXlyZG11aXdjZGdlem5vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMTAyMzgsImV4cCI6MjA5OTY4NjIzOH0.vkjxzsPnFv2pJwGXOQ8Ufyoe-LjgTLJR1CntHNjHtmY';
+  
+  window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>
